@@ -1,18 +1,24 @@
 from flask import Flask, render_template, jsonify
 import pandas as pd
 from datetime import datetime, timedelta
+from flask import Flask
+from flask_cors import CORS
 
+# Enable CORS for all routes and origins
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@app.route('/all', methods=['GET'])
+
+@app.route("/all", methods=["GET"])
 def fetchData():
     # add column names to data: reservation_date, appointment_date, vehicle_type and sort by reservation_date
     data = pd.read_csv(
-        "./datafile.csv",
+        "datafile.csv",
         header=None,
         names=["reservation_date", "appointment_date", "vehicle_type"],
     )
@@ -22,13 +28,11 @@ def fetchData():
     schedule_start_date = datetime.strptime("2022-10-01", "%Y-%m-%d").date()
     schedule_end_date = datetime.strptime("2022-11-30", "%Y-%m-%d").date()
 
-
     class Task:
         def __init__(self, start_time, end_time, vehicle_type):
             self.start_time = start_time
             self.end_time = end_time
             self.vehicle_type = vehicle_type
-
 
     class Day:
         def __init__(self, date):
@@ -82,7 +86,6 @@ def fetchData():
 
             return True
 
-
     class Schedule:
         def __init__(self):
             self.days = []
@@ -110,13 +113,10 @@ def fetchData():
                     apt_start_date, apt_end_date, vehicle_type
                 )
 
-            # remove days with no reservations
-            self.days = [day for day in self.days if day.tasks]
-
         # plot schedule using matplotlib
         def print_schedule(self):
             import matplotlib.pyplot as plt
-            
+
             fig, ax = plt.subplots(figsize=(10, 10))
             ax.set_title("Schedule")
             ax.set_xlabel("Days")
@@ -156,27 +156,98 @@ def fetchData():
             jsonData = []
             jsonData.append({"Total Revenue": [day.revenue for day in self.days]})
             jsonData.append({"Total Loss": [day.loss for day in self.days]})
-            jsonData.append({"Total compact serviced": [day.service_info["compact"]["serviced"] for day in self.days]})
-            jsonData.append({"Total medium serviced": [day.service_info["medium"]["serviced"] for day in self.days]})
-            jsonData.append({"Total full-size serviced": [day.service_info["full-size"]["serviced"] for day in self.days]})
-            jsonData.append({"Total class 1 truck serviced": [day.service_info["class 1 truck"]["serviced"] for day in self.days]})
-            jsonData.append({"Total class 2 truck serviced": [day.service_info["class 2 truck"]["serviced"] for day in self.days]})
-            jsonData.append({"Total compact rejected": [day.service_info["compact"]["rejected"] for day in self.days]})
-            jsonData.append({"Total medium rejected": [day.service_info["medium"]["rejected"] for day in self.days]})
-            jsonData.append({"Total full-size rejected": [day.service_info["full-size"]["rejected"] for day in self.days]})
-            jsonData.append({"Total class 1 truck rejected": [day.service_info["class 1 truck"]["rejected"] for day in self.days]})
-            jsonData.append({"Total class 2 truck rejected": [day.service_info["class 2 truck"]["rejected"] for day in self.days]})
+            jsonData.append(
+                {
+                    "Total compact serviced": [
+                        day.service_info["compact"]["serviced"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total medium serviced": [
+                        day.service_info["medium"]["serviced"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total full-size serviced": [
+                        day.service_info["full-size"]["serviced"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total class 1 truck serviced": [
+                        day.service_info["class 1 truck"]["serviced"]
+                        for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total class 2 truck serviced": [
+                        day.service_info["class 2 truck"]["serviced"]
+                        for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total compact rejected": [
+                        day.service_info["compact"]["rejected"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total medium rejected": [
+                        day.service_info["medium"]["rejected"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total full-size rejected": [
+                        day.service_info["full-size"]["rejected"] for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total class 1 truck rejected": [
+                        day.service_info["class 1 truck"]["rejected"]
+                        for day in self.days
+                    ]
+                }
+            )
+            jsonData.append(
+                {
+                    "Total class 2 truck rejected": [
+                        day.service_info["class 2 truck"]["rejected"]
+                        for day in self.days
+                    ]
+                }
+            )
+
+            jsonData.append(
+                {"Total Total Revenue": sum([day.revenue for day in self.days])}
+            )
+            jsonData.append({"Total Total Loss": sum([day.loss for day in self.days])})
+
             print(jsonData)
             return jsonData
-
 
     schedule = Schedule()
     schedule.process_reservations(data)
     jsonData2 = schedule.print_stats()
     return jsonify(jsonData2), 200
     # schedule.print_schedule()
-    #To print the type of error...
+    # To print the type of error...
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from werkzeug.serving import run_simple
-    run_simple('127.0.0.1', 5100, app)
+
+    run_simple("127.0.0.1", 5100, app)

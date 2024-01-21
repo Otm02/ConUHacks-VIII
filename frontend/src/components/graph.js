@@ -1,68 +1,68 @@
-import React from 'react'
-import { useState } from 'react';
-import { Brush, Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, AreaChart, ResponsiveContainer } from 'recharts'
+import React, { useState } from 'react';
+import {
+  Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
 
+function Graph({ updateRevenue, stats }) {
+  const data = [];
 
-function generateRandomNumber(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+  for (let i = 0; i < stats[0]["Total Revenue"].length; i++) {
+    data.push({
+      "name": "Day " + (i + 1).toString(),
+      "Compact": stats[2]["Total compact serviced"][i],
+      "Medium": stats[3]["Total medium serviced"][i],
+      "Fullsize": stats[4]["Total full-size serviced"][i],
+      "C1 Truck": stats[5]["Total class 1 truck serviced"][i],
+      "C2 Truck": stats[6]["Total class 2 truck serviced"][i],
+    });
+  }
 
-const data = [];
-for (let i = 1; i <= 61; i++) {
+  const [brushIndex, setBrushIndex] = useState([0, data.length - 1]);
+  const [brushDomain, setBrushDomain] = useState([data[0].name, data[data.length - 1].name]);
 
-  data.push({
-    "name": "Day " + i.toString(),
-    "Compact": generateRandomNumber(1, 5),
-    "Medium": generateRandomNumber(1, 5),
-    "Fullsize": generateRandomNumber(1, 5),
-    "C1 Truck": generateRandomNumber(1, 5),
-    "C2 Truck": generateRandomNumber(1, 5),
-  });
-}
-
-
-function Graph({ updateRevenue }) {
-  const [brushIndex, setBrushIndex] = useState([0, 60])
-
-  // Function to update revenue when brush is changed
   const handleBrushChange = (domain) => {
-    console.log(domain);
-    setBrushIndex([domain.startIndex, domain.endIndex]);
-    updateRevenue(data.slice(domain.startIndex, domain.endIndex).reduce((accumulator, current) => {
-      return accumulator + ((current.Compact * 150) + (current.Medium * 150) + (current.Fullsize * 150) + (current["C1 Truck"] * 250) + (current["C2 Truck"] * 700));
-    }, 0))
+    if (domain && domain.length === 2) {
+      const startIndex = data.findIndex(item => item.name === domain[0]);
+      const endIndex = data.findIndex(item => item.name === domain[1]);
+      setBrushIndex([startIndex, endIndex]);
+      setBrushDomain([data[startIndex].name, data[endIndex].name]);
 
+      const newRevenue = data.slice(startIndex, endIndex + 1).reduce((accumulator, current) => {
+        return accumulator + ((current.Compact * 150) + (current.Medium * 150) + (current.Fullsize * 150) + (current["C1 Truck"] * 250) + (current["C2 Truck"] * 700));
+      }, 0);
+      updateRevenue(newRevenue);
+    }
   };
 
   return (
-    <div>
-      <p>Brush Index: {brushIndex[0]} - {brushIndex[1]}</p>
-      <LineChart width={875} height={350} data={data}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
+    <ResponsiveContainer width="95%" height={400}>
+      <LineChart
+        data={data}
+        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      >
         <XAxis dataKey="name" />
         <YAxis />
+        <CartesianGrid strokeDasharray="3 3" />
         <Tooltip />
-        <Legend verticalAlign="top" height={36} />
+        <Legend />
         <Line type="monotone" dataKey="Compact" stroke="#8884d8" />
         <Line type="monotone" dataKey="Medium" stroke="#82ca9d" />
-        <Line type="monotone" dataKey="Fullsize" stroke="#C70039" />
-        <Line type="monotone" dataKey="C1 Truck" stroke="#C700BE" />
-        <Line type="monotone" dataKey="C2 Truck" stroke="#FFCB08" />
-        <Brush dataKey="x" height={36} stroke="#000000" fill="transparent" onChange={handleBrushChange}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" hide />
-            <YAxis hide />
-            <Line type="monotone" dataKey="Compact" stroke="#8884d8" />
-            <Line type="monotone" dataKey="Medium" stroke="#82ca9d" />
-            <Line type="monotone" dataKey="Fullsize" stroke="#C70039" />
-            <Line type="monotone" dataKey="C1 Truck" stroke="#C700BE" />
-            <Line type="monotone" dataKey="C2 Truck" stroke="#FFCB08" />
-          </LineChart>
-        </Brush>
+        <Line type="monotone" dataKey="Fullsize" stroke="#ffc658" />
+        <Line type="monotone" dataKey="C1 Truck" stroke="#8884f7" />
+        <Line type="monotone" dataKey="C2 Truck" stroke="#82caac" />
+        {data.length > 0 && (
+          <Brush
+            dataKey="name"
+            height={30}
+            startIndex={brushIndex[0]}
+            endIndex={brushIndex[1]}
+            onChange={handleBrushChange}
+            domain={brushDomain}
+          />
+        )}
       </LineChart>
-    </div>
-  )
+    </ResponsiveContainer>
+  );
 }
-export default Graph
+
+export default Graph;
